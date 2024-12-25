@@ -1,6 +1,13 @@
 # L2SKNet
-[TGRS2024] Implementation of our paper "Saliency at the Helm: Steering Infrared Small Target Detection with Learnable Kernels".
+**[IEEE TGRS] Implementation of our paper "Saliency at the Helm: Steering Infrared Small Target Detection with Learnable Kernels".** [**Paper**](https://ieeexplore.ieee.org/document/10813615)
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/2d449c88-529c-4c75-bcc2-fab154f21380" alt="image" width="700"/>
+</div>
+
+
+
+<p align="center"> Highlighting our domain-aware LLSKM, unfolding the 'Center substracts Neighbors' pattern.</p>
 
 ## Requirements
 - **Python 3.8**
@@ -20,30 +27,6 @@
 * **The dataset in our project has the following structure:**
 ```
 ├──./data/
-│    ├── NUDT-SIRST
-│    │    ├── images
-│    │    │    ├── 000001.png
-│    │    │    ├── 000002.png
-│    │    │    ├── ...
-│    │    ├── img_idx
-│    │    │    ├── test_NUDT-SIRST.txt
-│    │    │    ├── train_NUDT-SIRST.txt
-│    │    ├── masks
-│    │    │    ├── 000001.png
-│    │    │    ├── 000002.png
-│    │    │    ├── ...
-│    ├── IRSTD-1K
-│    │    ├── images
-│    │    │    ├── XDU0.png
-│    │    │    ├── XDU1.png
-│    │    │    ├── ...
-│    │    ├── img_idx
-│    │    │    ├── test_IRSTD-1K.txt
-│    │    │    ├── train_IRSTD-1K.txt
-│    │    ├── masks
-│    │    │    ├── XDU0.png
-│    │    │    ├── XDU1.png
-│    │    │    ├── ...
 │    ├── sirst_aug
 │    │    ├── images
 │    │    │    ├── 000000.png
@@ -56,6 +39,7 @@
 │    │    │    ├── 000000_mask.png
 │    │    │    ├── 000001_mask.png
 │    │    │    ├── ...
+│    ├── ...
 ```
 <br>
 
