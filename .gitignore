@@ -33,3 +33,7 @@ Thumbs.db
 
 images/
 masks/
+
+log/
+training_logs/
+result/
