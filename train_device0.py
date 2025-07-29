@@ -10,7 +10,6 @@ import os
 
 from utils.datasets import NUDTSIRSTSetLoader
 from utils.datasets import IRSTD1KSetLoader
-from utils.datasets import SIRSTAugSetLoader
 
 from evaluation.mIoU import mIoU
 from evaluation.pd_fa import PD_FA
@@ -28,7 +27,7 @@ parser.add_argument("--model_names", default='L2SKNet_UNet', type=str, nargs='+'
                     help="model_name: 'L2SKNet_UNet', 'L2SKNet_FPN', "
                          "'L2SKNet_1D_UNet', 'L2SKNet_1D_FPN'")
 parser.add_argument("--dataset_names", default='NUDT-SIRST', type=str, nargs='+',
-                    help="dataset_name: 'NUDT-SIRST', 'IRSTD-1K', 'SIRST-aug'")
+                    help="dataset_name: 'NUDT-SIRST', 'IRSTD-1K'")
 
 parser.add_argument("--dataset_dir", default='./data', type=str, help="train_dataset_dir")
 parser.add_argument("--batchSize", type=int, default=8, help="Training batch sizse")
@@ -56,9 +55,6 @@ def train():
     elif opt.dataset_name == "IRSTD-1K":
         dataset_dir = r'./data/IRSTD-1K/'
         train_set = IRSTD1KSetLoader(base_dir=dataset_dir, mode='trainval')
-    elif opt.dataset_name == "SIRST-aug":
-        dataset_dir = r'./data/sirst_aug/'
-        train_set = SIRSTAugSetLoader(base_dir=dataset_dir, mode='trainval')
     else:
         raise NotImplementedError
 
@@ -142,9 +138,6 @@ def test_with_save(save_pth, idx_epoch, total_loss_list, net_state_dict):
     elif opt.dataset_name == "IRSTD-1K":
         dataset_dir = r'./data/IRSTD-1K/'
         test_set = IRSTD1KSetLoader(base_dir=dataset_dir, mode='test')
-    elif opt.dataset_name == "SIRST-aug":
-        dataset_dir = r'./data/sirst_aug/'
-        test_set = SIRSTAugSetLoader(base_dir=dataset_dir, mode='test')
     else:
         raise NotImplementedError
     test_loader = DataLoader(dataset=test_set, num_workers=1, batch_size=1, shuffle=False)

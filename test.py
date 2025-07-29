@@ -8,7 +8,6 @@ from net import Net
 from utils.utils import seed_pytorch, get_optimizer
 from utils.datasets import NUDTSIRSTSetLoader
 from utils.datasets import IRSTD1KSetLoader
-from utils.datasets import SIRSTAugSetLoader
 from utils.datasets import SIRSTSetLoader
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
@@ -19,7 +18,7 @@ parser.add_argument("--model_names", default='L2SKNet_UNet', type=str, nargs='+'
                     help="model_name: 'L2SKNet_UNet', 'L2SKNet_FPN', "
                          "'L2SKNet_1D_UNet', 'L2SKNet_1D_FPN'")
 parser.add_argument("--dataset_names", default='NUDT-SIRST', type=str, nargs='+',
-                    help="dataset_name: 'NUDT-SIRST', 'IRSTD-1K', 'SIRST-aug','SIRST','NUAA-SIRST'")
+                    help="dataset_name: 'NUDT-SIRST', 'IRSTD-1K','SIRST','NUAA-SIRST'")
 parser.add_argument("--dataset_dir", default='./data', type=str, help="train_dataset_dir")
 parser.add_argument("--save", default='./log', type=str, help="Save path of checkpoints")
 parser.add_argument("--seed", type=int, default=42, help="Threshold for test")
@@ -38,9 +37,6 @@ def test():
     elif (opt.dataset_name == "IRSTD-1K"):
         dataset_dir = r'./data/IRSTD-1K/'
         test_set = IRSTD1KSetLoader(base_dir=dataset_dir, mode='test')
-    elif (opt.dataset_name == "SIRST-aug"):
-        dataset_dir = r'./data/sirst_aug/'
-        test_set = SIRSTAugSetLoader(base_dir=dataset_dir, mode='test')
     else:
         raise NotImplementedError
 

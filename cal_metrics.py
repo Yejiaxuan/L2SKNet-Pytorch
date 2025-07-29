@@ -21,7 +21,7 @@ parser.add_argument("--model_names", default='L2SKNet_UNet', type=str, nargs='+'
                     help="model_name: 'L2SKNet_UNet', 'L2SKNet_FPN', "
                          "'L2SKNet_1D_UNet', 'L2SKNet_1D_FPN'")
 parser.add_argument("--dataset_names", default='IRSTD-1K', type=str, nargs='+',
-                    help="dataset_name: 'NUDT-SIRST', 'IRSTD-1K', 'SIRST-aug'")
+                    help="dataset_name: 'NUDT-SIRST', 'IRSTD-1K'")
 parser.add_argument("--save", default='./result', type=str, help="Save path of results")
 global opt
 opt = parser.parse_args()
@@ -41,10 +41,6 @@ class Dataset_mat(Data.Dataset):
             self.base_dir = r'./data/IRSTD-1K/'
             txtfile = 'test_IRSTD-1K.txt'
             self.base_size = 512
-        elif (dataset == 'SIRST-aug'):
-            self.mat_dir = r'./result/SIRST-aug/mat/' + opt.model_name
-            self.base_dir = r'./data/sirst_aug/'
-            txtfile = 'test.txt'
         else:
             raise NotImplementedError
 
@@ -61,10 +57,7 @@ class Dataset_mat(Data.Dataset):
 
     def __getitem__(self, i):
         file_name = self.file_names[i]
-        if (self.dataset == 'SIRST-aug'):
-            mask_path = osp.join(self.mask_dir, file_name) + "_mask.png"
-        else:
-            mask_path = osp.join(self.mask_dir, file_name) + ".png"
+        mask_path = osp.join(self.mask_dir, file_name) + ".png"
         mat_path = osp.join(self.mat_dir, file_name) + ".mat"
 
         # print(mask_path)

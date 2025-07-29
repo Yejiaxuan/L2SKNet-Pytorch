@@ -15,7 +15,6 @@ import numpy as np
 
 from utils.datasets import NUDTSIRSTSetLoader
 from utils.datasets import IRSTD1KSetLoader
-from utils.datasets import SIRSTAugSetLoader
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
@@ -134,11 +133,6 @@ def find_optimal_batch_sizes_rtx4090():
             'class': IRSTD1KSetLoader,
             'dir': './data/IRSTD-1K/',
             'image_size': 512
-        },
-        'SIRST-aug': {
-            'class': SIRSTAugSetLoader,
-            'dir': './data/sirst_aug/',
-            'image_size': 256
         }
     }
     
@@ -246,8 +240,7 @@ def find_optimal_batch_sizes_rtx4090():
             # 计算相比RTX 5060的提升
             rtx5060_performance = {
                 'NUDT-SIRST': 62.5,  # 你的5060测试结果
-                'IRSTD-1K': 50,      # 估算值
-                'SIRST-aug': 45      # 估算值
+                'IRSTD-1K': 12.5      
             }
             
             if dataset_name in rtx5060_performance:

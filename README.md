@@ -18,9 +18,9 @@
 
 ## Datasets
 
-**We used the NUDT-SIRST, IRSTD-1K and sirst-aug for both training and test. Three datasets can be found and downloaded in:** [NUDT-SIRST](https://github.com/YeRen123455/Infrared-Small-Target-Detection), [IRSTD-1K](https://github.com/RuiZhang97/ISNet), [SIRST-Aug](https://github.com/Tianfang-Zhang/AGPCNet). 
+**We used the NUDT-SIRST and IRSTD-1K for both training and test. Two datasets can be found and downloaded in:** [NUDT-SIRST](https://github.com/YeRen123455/Infrared-Small-Target-Detection), [IRSTD-1K](https://github.com/RuiZhang97/ISNet). 
 
-**Please first download these datasets and place the 3 datasets to the folder `./data/`.** 
+**Please first download these datasets and place the 2 datasets to the folder `./data/`.** 
 
 
 
@@ -48,7 +48,7 @@
 
 * **Enter the repo, and run** `train_device0.py` **to perform network training:**
 ```bash
-$ python train_device0.py --model_names L2SKNet_FPN --dataset_names NUDT-SIRST IRSTD-1K SIRST-aug
+$ python train_device0.py --model_names L2SKNet_FPN --dataset_names NUDT-SIRST IRSTD-1K
 ```
 * **The** `model_name` **in our code corresponds to the model name in our paper as follows:**
 
@@ -74,7 +74,7 @@ $ python train_device0.py --model_names L2SKNet_FPN --dataset_names NUDT-SIRST I
 ## Commands for Evaluate your own results
 * **Run** `test.py` **to generate file of the format .mat and .png (`--test_epo 200` means test with the 200th epoch model):**
 ```bash
-$ python test.py --model_names L2SKNet_FPN --dataset_names NUDT-SIRST IRSTD-1K SIRST-aug --test_epo 200
+$ python test.py --model_names L2SKNet_FPN --dataset_names NUDT-SIRST IRSTD-1K --test_epo 200
 ```
 * **The file generated will be saved to** `./result/` **that has the following structure**:
 ```
@@ -93,7 +93,7 @@ $ python test.py --model_names L2SKNet_FPN --dataset_names NUDT-SIRST IRSTD-1K S
 ```
 * **Run** `cal_metrics.py` **for direct evaluation**:
 ```bash
-$ python cal_metrics.py --model_names L2SKNet_FPN --dataset_names NUDT-SIRST IRSTD-1K SIRST-aug
+$ python cal_metrics.py --model_names L2SKNet_FPN --dataset_names NUDT-SIRST IRSTD-1K
 ```
 * **The file generated will be saved to** `./result/` **that has the following structure**:
 ```

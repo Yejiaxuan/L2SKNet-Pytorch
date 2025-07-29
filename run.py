@@ -51,8 +51,7 @@ def run_training():
     
     datasets = [
         'NUDT-SIRST',
-        'IRSTD-1K', 
-        'SIRST-aug'
+        'IRSTD-1K'
     ]
     
     total = len(models) * len(datasets)
@@ -69,7 +68,7 @@ def run_training():
             if dataset == 'IRSTD-1K':  # 512x512
                 batch_size = '3'
                 num_workers = '8'
-            else:  # 256x256 (NUDT-SIRST, SIRST-aug)
+            else:  # 256x256
                 batch_size = '10'
                 num_workers = '2'
             

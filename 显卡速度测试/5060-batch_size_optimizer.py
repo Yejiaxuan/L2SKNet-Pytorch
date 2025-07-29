@@ -15,7 +15,7 @@ import numpy as np
 
 from utils.datasets import NUDTSIRSTSetLoader
 from utils.datasets import IRSTD1KSetLoader
-from utils.datasets import SIRSTAugSetLoader
+
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
@@ -141,11 +141,6 @@ def find_optimal_batch_sizes():
             'class': IRSTD1KSetLoader,
             'dir': './data/IRSTD-1K/',
             'image_size': 512
-        },
-        'SIRST-aug': {
-            'class': SIRSTAugSetLoader,
-            'dir': './data/sirst_aug/',
-            'image_size': 256
         }
     }
     
