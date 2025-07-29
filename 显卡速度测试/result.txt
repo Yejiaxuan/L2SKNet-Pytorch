@@ -1,0 +1,96 @@
+5060：
+  256x256:
+    BatchSize: 3
+    Num_Workers: 1/2
+----------------------------------------
+ 1. BS= 3, Workers=5 ->   62.0 samples/s, 时间=0.048s, 数据=0.003s, 计算=0.045s, GPU=0.6GB
+ 2. BS= 3, Workers=1 ->   61.0 samples/s, 时间=0.049s, 数据=0.003s, 计算=0.046s, GPU=0.6GB
+ 3. BS= 3, Workers=2 ->   61.0 samples/s, 时间=0.049s, 数据=0.003s, 计算=0.046s, GPU=0.6GB
+ 4. BS= 4, Workers=1 ->   60.6 samples/s, 时间=0.066s, 数据=0.006s, 计算=0.060s, GPU=0.8GB
+ 5. BS= 4, Workers=2 ->   60.6 samples/s, 时间=0.066s, 数据=0.006s, 计算=0.060s, GPU=0.8GB
+ 6. BS= 4, Workers=3 ->   60.5 samples/s, 时间=0.066s, 数据=0.005s, 计算=0.061s, GPU=0.8GB
+ 7. BS= 4, Workers=4 ->   60.4 samples/s, 时间=0.066s, 数据=0.006s, 计算=0.061s, GPU=0.8GB
+ 8. BS= 3, Workers=3 ->   60.2 samples/s, 时间=0.050s, 数据=0.005s, 计算=0.045s, GPU=0.6GB
+ 9. BS= 5, Workers=3 ->   59.2 samples/s, 时间=0.085s, 数据=0.007s, 计算=0.077s, GPU=1.0GB
+10. BS= 5, Workers=4 ->   59.0 samples/s, 时间=0.085s, 数据=0.007s, 计算=0.077s, GPU=1.0GB
+
+  512x512:
+    BatchSize: 3
+    Num_Workers: 1
+----------------------------------------
+ 1. BS= 3, Workers=1 ->   13.5 samples/s, 时间=0.223s, 数据=0.020s, 计算=0.202s, GPU=2.5GB
+ 2. BS= 3, Workers=5 ->   13.4 samples/s, 时间=0.224s, 数据=0.021s, 计算=0.203s, GPU=2.5GB
+ 3. BS= 3, Workers=3 ->   13.4 samples/s, 时间=0.224s, 数据=0.021s, 计算=0.203s, GPU=2.5GB
+ 4. BS= 3, Workers=2 ->   13.4 samples/s, 时间=0.224s, 数据=0.021s, 计算=0.203s, GPU=2.5GB
+ 5. BS= 3, Workers=4 ->   13.4 samples/s, 时间=0.224s, 数据=0.021s, 计算=0.203s, GPU=2.5GB
+ 6. BS= 4, Workers=1 ->   13.4 samples/s, 时间=0.300s, 数据=0.028s, 计算=0.272s, GPU=3.3GB
+ 7. BS= 4, Workers=3 ->   13.3 samples/s, 时间=0.301s, 数据=0.028s, 计算=0.273s, GPU=3.3GB
+ 8. BS= 4, Workers=4 ->   13.3 samples/s, 时间=0.301s, 数据=0.028s, 计算=0.273s, GPU=3.3GB
+ 9. BS= 4, Workers=2 ->   13.2 samples/s, 时间=0.302s, 数据=0.029s, 计算=0.274s, GPU=3.3GB
+10. BS= 5, Workers=5 ->   13.2 samples/s, 时间=0.378s, 数据=0.036s, 计算=0.342s, GPU=4.1GB
+
+
+
+4090：
+  256x256:
+    BatchSize: 12
+    Num_Workers: 1/2
+----------------------------------------
+ 1. BS= 18, Workers=8 ->  188.7 samples/s, 时间=0.095s, GPU=3.7GB
+ 2. BS= 12, Workers=1 ->  187.6 samples/s, 时间=0.064s, GPU=2.5GB
+ 3. BS= 12, Workers=2 ->  186.8 samples/s, 时间=0.064s, GPU=2.5GB
+ 4. BS= 12, Workers=8 ->  186.8 samples/s, 时间=0.064s, GPU=2.5GB
+ 5. BS= 12, Workers=4 ->  186.4 samples/s, 时间=0.064s, GPU=2.5GB
+ 6. BS= 12, Workers=3 ->  186.3 samples/s, 时间=0.064s, GPU=2.5GB
+ 7. BS= 10, Workers=1 ->  185.5 samples/s, 时间=0.054s, GPU=2.0GB
+ 8. BS= 10, Workers=8 ->  185.0 samples/s, 时间=0.054s, GPU=2.0GB
+ 9. BS= 10, Workers=2 ->  184.8 samples/s, 时间=0.054s, GPU=2.0GB
+10. BS= 10, Workers=4 ->  184.6 samples/s, 时间=0.054s, GPU=2.0GB
+
+  512x512:
+    BatchSize: 22/26
+    Num_Workers: 8
+----------------------------------------
+ 1. BS= 28, Workers=1 ->   41.9 samples/s, 时间=0.668s, GPU=22.8GB
+ 2. BS= 18, Workers=8 ->   41.7 samples/s, 时间=0.431s, GPU=14.7GB
+ 3. BS= 26, Workers=8 ->   41.6 samples/s, 时间=0.625s, GPU=21.2GB
+ 4. BS= 26, Workers=4 ->   41.6 samples/s, 时间=0.625s, GPU=21.2GB
+ 5. BS= 22, Workers=8 ->   41.6 samples/s, 时间=0.529s, GPU=17.9GB
+ 6. BS= 22, Workers=3 ->   41.6 samples/s, 时间=0.529s, GPU=17.9GB
+ 7. BS= 26, Workers=2 ->   41.6 samples/s, 时间=0.625s, GPU=21.2GB
+ 8. BS= 22, Workers=1 ->   41.6 samples/s, 时间=0.529s, GPU=17.9GB
+ 9. BS= 22, Workers=2 ->   41.6 samples/s, 时间=0.529s, GPU=17.9GB
+10. BS= 22, Workers=4 ->   41.6 samples/s, 时间=0.529s, GPU=17.9GB
+
+
+
+5090：
+  256x256:
+    BatchSize: 10
+    Num_Workers: 2
+----------------------------------------
+ 1. BS= 10, Workers=2 ->  230.4 samples/s, 时间=0.043s, GPU=2.0GB
+ 2. BS= 14, Workers=4 ->  226.3 samples/s, 时间=0.062s, GPU=2.9GB
+ 3. BS=  8, Workers=2 ->  225.1 samples/s, 时间=0.036s, GPU=1.6GB
+ 4. BS= 14, Workers=5 ->  223.3 samples/s, 时间=0.063s, GPU=2.9GB
+ 5. BS= 16, Workers=6 ->  222.0 samples/s, 时间=0.072s, GPU=3.3GB
+ 6. BS= 16, Workers=5 ->  221.2 samples/s, 时间=0.072s, GPU=3.3GB
+ 7. BS= 16, Workers=2 ->  221.1 samples/s, 时间=0.072s, GPU=3.3GB
+ 8. BS= 14, Workers=6 ->  221.1 samples/s, 时间=0.063s, GPU=2.9GB
+ 9. BS= 14, Workers=1 ->  220.8 samples/s, 时间=0.063s, GPU=2.9GB
+10. BS= 14, Workers=8 ->  220.4 samples/s, 时间=0.064s, GPU=2.9GB
+
+  512x512:
+    BatchSize: 3
+    Num_Workers: 8
+----------------------------------------
+ 1. BS=  5, Workers=5 ->   50.8 samples/s, 时间=0.098s, GPU=4.1GB
+ 2. BS=  3, Workers=6 ->   50.8 samples/s, 时间=0.059s, GPU=2.5GB
+ 3. BS=  4, Workers=8 ->   50.6 samples/s, 时间=0.079s, GPU=3.3GB
+ 4. BS=  3, Workers=8 ->   50.5 samples/s, 时间=0.059s, GPU=2.5GB
+ 5. BS=  3, Workers=4 ->   50.5 samples/s, 时间=0.059s, GPU=2.5GB
+ 6. BS=  3, Workers=1 ->   50.0 samples/s, 时间=0.060s, GPU=2.5GB
+ 7. BS=  5, Workers=3 ->   49.9 samples/s, 时间=0.100s, GPU=4.1GB
+ 8. BS=  5, Workers=6 ->   49.9 samples/s, 时间=0.100s, GPU=4.1GB
+ 9. BS=  4, Workers=2 ->   49.8 samples/s, 时间=0.080s, GPU=3.3GB
+10. BS=  4, Workers=4 ->   49.6 samples/s, 时间=0.081s, GPU=3.3GB
