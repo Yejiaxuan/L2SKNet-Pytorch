@@ -142,7 +142,7 @@ class SIRSTAugSetLoader(Dataset):
     def __getitem__(self, i):
         name = self.names[i]
         img_path = osp.join(self.imgs_dir, name + '.png')
-        label_path = osp.join(self.label_dir, name + '_mask.png')
+        label_path = osp.join(self.label_dir, name + '.png')
 
         img = load_image(img_path)
         mask = load_image(label_path)
