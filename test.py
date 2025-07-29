@@ -8,7 +8,6 @@ from net import Net
 from utils.utils import seed_pytorch, get_optimizer
 from utils.datasets import NUDTSIRSTSetLoader
 from utils.datasets import IRSTD1KSetLoader
-from utils.datasets import SIRSTSetLoader
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 

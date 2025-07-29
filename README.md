@@ -27,7 +27,7 @@
 * **The dataset in our project has the following structure:**
 ```
 ├──./data/
-│    ├── sirst_aug
+│    ├── NUDT-SIRST
 │    │    ├── images
 │    │    │    ├── 000000.png
 │    │    │    ├── 000001.png
