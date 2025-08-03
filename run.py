@@ -50,8 +50,7 @@ def run_training():
     ]
     
     datasets = [
-        'NUDT-SIRST',
-        'IRSTD-1K'
+        'NUDT-SIRST'
     ]
     
     total = len(models) * len(datasets)
@@ -65,12 +64,8 @@ def run_training():
             print(f"[{current}/{total}] {current_time} - Training {model} on {dataset}")
             
             # RTX 5090最佳配置：根据数据集选择参数
-            if dataset == 'IRSTD-1K':  # 512x512
-                batch_size = '3'
-                num_workers = '8'
-            else:  # 256x256
-                batch_size = '10'
-                num_workers = '2'
+            batch_size = '10'
+            num_workers = '2'
             
             cmd = [
                 'python', 'train_device0.py',

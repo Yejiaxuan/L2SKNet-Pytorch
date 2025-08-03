@@ -9,7 +9,6 @@ import numpy as np
 import os
 
 from utils.datasets import NUDTSIRSTSetLoader
-from utils.datasets import IRSTD1KSetLoader
 
 from evaluation.mIoU import mIoU
 from evaluation.pd_fa import PD_FA
@@ -27,7 +26,7 @@ parser.add_argument("--model_names", default='L2SKNet_UNet', type=str, nargs='+'
                     help="model_name: 'L2SKNet_UNet', 'L2SKNet_FPN', "
                          "'L2SKNet_1D_UNet', 'L2SKNet_1D_FPN'")
 parser.add_argument("--dataset_names", default='NUDT-SIRST', type=str, nargs='+',
-                    help="dataset_name: 'NUDT-SIRST', 'IRSTD-1K'")
+                    help="dataset_name: 'NUDT-SIRST'")
 
 parser.add_argument("--dataset_dir", default='./data', type=str, help="train_dataset_dir")
 parser.add_argument("--batchSize", type=int, default=8, help="Training batch sizse")
@@ -52,9 +51,6 @@ def train():
     if opt.dataset_name == "NUDT-SIRST":
         dataset_dir = r'./data/NUDT-SIRST/'
         train_set = NUDTSIRSTSetLoader(base_dir=dataset_dir, mode='trainval')
-    elif opt.dataset_name == "IRSTD-1K":
-        dataset_dir = r'./data/IRSTD-1K/'
-        train_set = IRSTD1KSetLoader(base_dir=dataset_dir, mode='trainval')
     else:
         raise NotImplementedError
 
@@ -135,9 +131,6 @@ def test_with_save(save_pth, idx_epoch, total_loss_list, net_state_dict):
     if opt.dataset_name == "NUDT-SIRST":
         dataset_dir = r'./data/NUDT-SIRST/'
         test_set = NUDTSIRSTSetLoader(base_dir=dataset_dir, mode='test')
-    elif opt.dataset_name == "IRSTD-1K":
-        dataset_dir = r'./data/IRSTD-1K/'
-        test_set = IRSTD1KSetLoader(base_dir=dataset_dir, mode='test')
     else:
         raise NotImplementedError
     test_loader = DataLoader(dataset=test_set, num_workers=1, batch_size=1, shuffle=False)
@@ -228,4 +221,4 @@ if __name__ == '__main__':
 # For single model：
 # python train_device0.py --model_names L2SKNet_UNet --dataset_names NUDT-SIRST
 # For multi model：
-# python train_device0.py --model_names L2SKNet_UNet L2SKNet_FPN --dataset_names IRSTD-1K NUDT-SIRST
+# python train_device0.py --model_names L2SKNet_UNet L2SKNet_FPN --dataset_names NUDT-SIRST

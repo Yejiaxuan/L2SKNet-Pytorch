@@ -20,8 +20,8 @@ parser = argparse.ArgumentParser(description="PyTorch L2SKNet cal")
 parser.add_argument("--model_names", default='L2SKNet_UNet', type=str, nargs='+',
                     help="model_name: 'L2SKNet_UNet', 'L2SKNet_FPN', "
                          "'L2SKNet_1D_UNet', 'L2SKNet_1D_FPN'")
-parser.add_argument("--dataset_names", default='IRSTD-1K', type=str, nargs='+',
-                    help="dataset_name: 'NUDT-SIRST', 'IRSTD-1K'")
+parser.add_argument("--dataset_names", default='NUDT-SIRST', type=str, nargs='+',
+                    help="dataset_name: 'NUDT-SIRST'")
 parser.add_argument("--save", default='./result', type=str, help="Save path of results")
 global opt
 opt = parser.parse_args()
@@ -36,11 +36,6 @@ class Dataset_mat(Data.Dataset):
             self.mat_dir = r'./result/NUDT-SIRST/mat/' + opt.model_name
             self.base_dir = r'./data/NUDT-SIRST/'
             txtfile = 'test_NUDT-SIRST.txt'
-        elif (dataset == 'IRSTD-1K'):
-            self.mat_dir = r'./result/IRSTD-1K/mat/' + opt.model_name
-            self.base_dir = r'./data/IRSTD-1K/'
-            txtfile = 'test_IRSTD-1K.txt'
-            self.base_size = 512
         else:
             raise NotImplementedError
 
@@ -89,11 +84,7 @@ def cal_fpr_tpr():
 
     thre = 0.5
 
-    #metrics = ROCMetric(nclass=1, bins=nbins)
-    if (opt.dataset_name == 'IRSTD-1K'):
-        baseSize =512
-    else:
-        baseSize =256
+    baseSize =256
 
     dataset = Dataset_mat(opt.dataset_name, base_size=baseSize, thre=thre)
 

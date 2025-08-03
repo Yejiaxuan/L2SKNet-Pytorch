@@ -14,7 +14,6 @@ from utils.utils import seed_pytorch
 import numpy as np
 
 from utils.datasets import NUDTSIRSTSetLoader
-from utils.datasets import IRSTD1KSetLoader
 
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
@@ -136,11 +135,6 @@ def find_optimal_batch_sizes():
             'class': NUDTSIRSTSetLoader,
             'dir': './data/NUDT-SIRST/',
             'image_size': 256
-        },
-        'IRSTD-1K': {
-            'class': IRSTD1KSetLoader,
-            'dir': './data/IRSTD-1K/',
-            'image_size': 512
         }
     }
     
