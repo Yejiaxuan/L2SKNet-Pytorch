@@ -11,7 +11,7 @@ import math
 
 
 class LearnableThreshold(nn.Module):
-    """可学习阈值模块，替代传统固定阈值"""
+    """可学习软阈值模块，使用sigmoid平滑过渡"""
     def __init__(self, channels, init_value=0.5):
         super(LearnableThreshold, self).__init__()
         self.threshold = nn.Parameter(torch.ones(1, channels, 1, 1) * init_value)
@@ -21,7 +21,10 @@ class LearnableThreshold(nn.Module):
         # 动态阈值：sigmoid(threshold) * max_value
         max_val = torch.max(x.view(x.size(0), x.size(1), -1), dim=2, keepdim=True)[0].unsqueeze(-1)
         dynamic_thresh = self.sigmoid(self.threshold) * max_val
-        return torch.where(x > dynamic_thresh, x, torch.zeros_like(x))
+        
+        # 软阈值：使用sigmoid平滑过渡
+        gate = torch.sigmoid(10 * (x - dynamic_thresh))  # 10是陡峭度参数
+        return x * gate
 
 
 class DifferentiableTopHat(nn.Module):
@@ -160,110 +163,74 @@ class DifferentiableLoG(nn.Module):
 
 class MorphologyNet(nn.Module):
     """
-    形态学知识迁移网络
-    实现传统「区域增强 → 噪声抑制 → 判别阈值」三阶段pipeline
+    统一的多尺度形态学网络
+    通过调整scales参数控制复杂度：
+    - 高分辨率层：scales=[3, 5, 7] (多尺度)
+    - 中分辨率层：scales=[3, 5] (中等尺度)  
+    - 低分辨率层：scales=[5] (单尺度)
     """
-    def __init__(self, channels, enable_tophat=True, enable_maxmedian=True, enable_log=True):
+    def __init__(self, channels, scales=[3, 5, 7]):
         super(MorphologyNet, self).__init__()
-        self.enable_tophat = enable_tophat
-        self.enable_maxmedian = enable_maxmedian  
-        self.enable_log = enable_log
+        self.scales = scales
         
-        # 阶段1：区域增强
-        if enable_tophat:
-            self.top_hat = DifferentiableTopHat(channels, kernel_size=7)
-        if enable_log:
-            self.log_filter = DifferentiableLoG(channels, sigma=1.0)
-            
+        # 阶段1：多尺度区域增强
+        self.multi_tophat = nn.ModuleList([
+            DifferentiableTopHat(channels, kernel_size=scale) for scale in scales
+        ])
+        
+        # 多尺度LoG算子（用于边缘增强）
+        self.multi_log = nn.ModuleList([
+            DifferentiableLoG(channels, sigma=scale/3.0) for scale in scales
+        ])
+        
+        # 阶段1特征融合
+        total_features = len(scales) * 2 + 1  # tophat + log + 原始特征
+        self.stage1_fusion = nn.Sequential(
+            nn.Conv2d(channels * total_features, channels, 1, bias=False),
+            nn.BatchNorm2d(channels),
+            nn.ReLU(inplace=True)
+        )
+        
         # 阶段2：噪声抑制
-        if enable_maxmedian:
-            self.max_median = DifferentiableMaxMedian(channels, window_size=5)
+        self.max_median = DifferentiableMaxMedian(channels, window_size=5)
+        
+        # 阶段2特征融合
+        self.stage2_fusion = nn.Sequential(
+            nn.Conv2d(channels * 2, channels, 1, bias=False),  # enhanced + denoised
+            nn.BatchNorm2d(channels),
+            nn.ReLU(inplace=True)
+        )
         
         # 阶段3：判别阈值
         self.threshold = LearnableThreshold(channels, init_value=0.3)
         
-        # 特征融合 - 阶段1
-        stage1_channels = channels
-        if enable_tophat:
-            stage1_channels += channels
-        if enable_log:
-            stage1_channels += channels
-            
-        self.stage1_fusion = nn.Sequential(
-            nn.Conv2d(stage1_channels, channels, 1, bias=False),
-            nn.BatchNorm2d(channels),
-            nn.ReLU(inplace=True)
-        )
-        
-        # 特征融合 - 阶段2（如果启用噪声抑制）
-        if enable_maxmedian:
-            self.stage2_fusion = nn.Sequential(
-                nn.Conv2d(channels * 2, channels, 1, bias=False),  # enhanced + denoised
-                nn.BatchNorm2d(channels),
-                nn.ReLU(inplace=True)
-            )
-        
-        # 残差连接权重
+        # 残差权重
         self.alpha = nn.Parameter(torch.tensor(0.1))
         
     def forward(self, x):
-        features = [x]  # 原始特征
+        # 阶段1：多尺度区域增强
+        features = [x]  # 包含原始特征
         
-        # 阶段1：区域增强
-        if self.enable_tophat:
-            tophat_out = self.top_hat(x)
-            features.append(tophat_out)
+        # 多尺度Top-Hat
+        for tophat in self.multi_tophat:
+            features.append(tophat(x))
             
-        if self.enable_log:
-            log_out = self.log_filter(x)
-            features.append(log_out)
+        # 多尺度LoG
+        for log_filter in self.multi_log:
+            features.append(log_filter(x))
         
         # 融合增强特征
-        enhanced = torch.cat(features, dim=1)
-        enhanced = self.stage1_fusion(enhanced)
+        combined = torch.cat(features, dim=1)
+        enhanced = self.stage1_fusion(combined)
         
         # 阶段2：噪声抑制
-        if self.enable_maxmedian:
-            denoised = self.max_median(enhanced)
-            features_stage2 = [enhanced, denoised]
-            combined = torch.cat(features_stage2, dim=1)
-            combined = self.stage2_fusion(combined)
-        else:
-            combined = enhanced
-            
+        denoised = self.max_median(enhanced)
+        stage2_features = [enhanced, denoised]
+        combined_stage2 = torch.cat(stage2_features, dim=1)
+        refined = self.stage2_fusion(combined_stage2)
+        
         # 阶段3：判别阈值
-        thresholded = self.threshold(combined)
-        
-        # 残差连接：原始特征 + α * 形态学特征
-        output = x + self.alpha * thresholded
-        
-        return output
-
-
-class MorphologyNetLite(nn.Module):
-    """
-    轻量级形态学网络，用于计算资源受限的情况
-    """
-    def __init__(self, channels):
-        super(MorphologyNetLite, self).__init__()
-        
-        # 简化的Top-Hat
-        self.simple_tophat = nn.Sequential(
-            nn.Conv2d(channels, channels, 5, padding=2, groups=channels, bias=False),
-            nn.BatchNorm2d(channels),
-            nn.ReLU(inplace=True)
-        )
-        
-        # 简化的阈值
-        self.threshold = LearnableThreshold(channels, init_value=0.2)
-        
-        # 残差权重
-        self.alpha = nn.Parameter(torch.tensor(0.05))
-        
-    def forward(self, x):
-        # 简单的增强操作
-        enhanced = self.simple_tophat(x)
-        thresholded = self.threshold(enhanced)
+        thresholded = self.threshold(refined)
         
         # 残差连接
         output = x + self.alpha * thresholded
@@ -273,20 +240,32 @@ class MorphologyNetLite(nn.Module):
 if __name__ == "__main__":
     # 测试代码
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
-    # 测试完整版
-    morph_net = MorphologyNet(channels=16).to(device)
     x = torch.randn(2, 16, 64, 64).to(device)
-    out = morph_net(x)
-    print(f"MorphologyNet output shape: {out.shape}")
     
-    # 测试轻量版
-    morph_lite = MorphologyNetLite(channels=16).to(device)
-    out_lite = morph_lite(x)
-    print(f"MorphologyNetLite output shape: {out_lite.shape}")
+    # 测试不同尺度配置的多尺度形态学网络
+    print("=== 统一多尺度形态学网络测试 ===")
+    
+    # 高分辨率层配置：多尺度
+    morph_high = MorphologyNet(channels=16, scales=[3, 5, 7]).to(device)
+    out_high = morph_high(x)
+    print(f"高分辨率层 (scales=[3,5,7]) output shape: {out_high.shape}")
+    
+    # 中分辨率层配置：中等尺度
+    morph_mid = MorphologyNet(channels=16, scales=[3, 5]).to(device)
+    out_mid = morph_mid(x)
+    print(f"中分辨率层 (scales=[3,5]) output shape: {out_mid.shape}")
+    
+    # 低分辨率层配置：单尺度
+    morph_low = MorphologyNet(channels=16, scales=[5]).to(device)
+    out_low = morph_low(x)
+    print(f"低分辨率层 (scales=[5]) output shape: {out_low.shape}")
     
     # 参数量对比
-    total_params = sum(p.numel() for p in morph_net.parameters())
-    lite_params = sum(p.numel() for p in morph_lite.parameters())
-    print(f"MorphologyNet params: {total_params}")
-    print(f"MorphologyNetLite params: {lite_params}")
+    high_params = sum(p.numel() for p in morph_high.parameters())
+    mid_params = sum(p.numel() for p in morph_mid.parameters())
+    low_params = sum(p.numel() for p in morph_low.parameters())
+    
+    print(f"\n=== 参数量对比 ===")
+    print(f"高分辨率层 (3尺度): {high_params:,} 参数")
+    print(f"中分辨率层 (2尺度): {mid_params:,} 参数")
+    print(f"低分辨率层 (1尺度): {low_params:,} 参数")

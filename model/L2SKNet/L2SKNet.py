@@ -5,7 +5,7 @@ import torch.utils.data
 from .fusion import AddFuseLayer
 from .res_block import ResidualBlock
 from .LLSKMs import LLSKM, LLSKM_d, LLSKM_1D
-from .morphology_net import MorphologyNet, MorphologyNetLite
+from .morphology_net import MorphologyNet
 
 
 
@@ -166,11 +166,12 @@ class L2SKNet_FPN(nn.Module):
         self.fuse21 = _fuse_layer(channels[2], channels[1], channels[1])
         self.fuse10 = _fuse_layer(channels[1], channels[0], channels[0])
 
-        # 添加形态学知识迁移模块
+        # 添加形态学知识迁移模块 - 重新分配计算资源
         if self.use_morphology:
-            self.morphology_net_0 = MorphologyNet(channels[0])
-            self.morphology_net_1 = MorphologyNetLite(channels[1])  # 高层用轻量版
-            self.morphology_net_2 = MorphologyNetLite(channels[2])
+            # 统一使用多尺度形态学网络，通过尺度数量控制复杂度
+            self.morphology_net_0 = MorphologyNet(channels[0], scales=[3, 5, 7])  # 高分辨率：多尺度
+            self.morphology_net_1 = MorphologyNet(channels[1], scales=[3, 5])     # 中分辨率：中等尺度
+            self.morphology_net_2 = MorphologyNet(channels[2], scales=[5])        # 低分辨率：单尺度
 
         self.head = _FCNHead(channels[0], 1)
 
@@ -186,31 +187,52 @@ class L2SKNet_FPN(nn.Module):
         _, _, c1_hei, c1_wid = c1.shape
         _, _, c2_hei, c2_wid = c2.shape
 
-        c0_0 = self.contrast0_0(c0)
-        c0_1 = self.contrast0_1(c0)
-        c0_2 = self.contrast0_2(c0)
-        c0_3 = self.contrast0_3(c0)
-        c0_all = c0_0 + c0_1 + c0_2 + c0_3
-        c0 = self.contrConV_0(c0_all)
+        # 并行协同处理：形态学与LLSKM协同工作
+        if self.use_morphology:
+            # c0层：多尺度形态学预处理 + LLSKM + 形态学后处理
+            c0_morph_pre = self.morphology_net_0(c0)
+            c0_0 = self.contrast0_0(c0_morph_pre)
+            c0_1 = self.contrast0_1(c0_morph_pre)
+            c0_2 = self.contrast0_2(c0_morph_pre)
+            c0_3 = self.contrast0_3(c0_morph_pre)
+            c0_all = c0_0 + c0_1 + c0_2 + c0_3
+            c0 = self.contrConV_0(c0_all)
+            
+            # c1层：形态学预处理 + LLSKM
+            c1_morph_pre = self.morphology_net_1(c1)
+            c1_0 = self.contrast1_0(c1_morph_pre)
+            c1_1 = self.contrast1_1(c1_morph_pre)
+            c1_2 = self.contrast1_2(c1_morph_pre)
+            c1_all = c1_0 + c1_1 + c1_2
+            c1 = self.contrConV_1(c1_all)
+            
+            # c2层：轻量形态学预处理 + LLSKM
+            c2_morph_pre = self.morphology_net_2(c2)
+            c2_0 = self.contrast2_0(c2_morph_pre)
+            c2_1 = self.contrast2_1(c2_morph_pre)
+            c2_all = c2_0 + c2_1
+            c2 = self.contrConV_2(c2_all)
+        else:
+            # 原始LLSKM处理
+            c0_0 = self.contrast0_0(c0)
+            c0_1 = self.contrast0_1(c0)
+            c0_2 = self.contrast0_2(c0)
+            c0_3 = self.contrast0_3(c0)
+            c0_all = c0_0 + c0_1 + c0_2 + c0_3
+            c0 = self.contrConV_0(c0_all)
 
-        c1_0 = self.contrast1_0(c1)
-        c1_1 = self.contrast1_1(c1)
-        c1_2 = self.contrast1_2(c1)
-        c1_all = c1_0 + c1_1 + c1_2
-        c1 = self.contrConV_1(c1_all)
+            c1_0 = self.contrast1_0(c1)
+            c1_1 = self.contrast1_1(c1)
+            c1_2 = self.contrast1_2(c1)
+            c1_all = c1_0 + c1_1 + c1_2
+            c1 = self.contrConV_1(c1_all)
 
-        c2_0 = self.contrast2_0(c2)
-        c2_1 = self.contrast2_1(c2)
-        c2_all = c2_0 + c2_1
-        c2 = self.contrConV_2(c2_all)
+            c2_0 = self.contrast2_0(c2)
+            c2_1 = self.contrast2_1(c2)
+            c2_all = c2_0 + c2_1
+            c2 = self.contrConV_2(c2_all)
 
         c3 = self.contrast3(c3)
-
-        # 应用形态学知识迁移
-        if self.use_morphology:
-            c0 = self.morphology_net_0(c0)
-            c1 = self.morphology_net_1(c1)
-            c2 = self.morphology_net_2(c2)
 
         out = F.interpolate(c3, size=[c2_hei, c2_wid], mode='bilinear')
         out = self.fuse32(out, c2)
@@ -455,11 +477,12 @@ class L2SKNet_UNet(nn.Module):
         self.Up_conv2 = conv_block(filters[1], filters[0])
         self.Conv = nn.Conv2d(filters[0], out_ch, kernel_size=1, stride=1, padding=0)
 
-        # 添加形态学知识迁移模块
+        # 添加形态学知识迁移模块 - 重新分配计算资源
         if self.use_morphology:
-            self.morphology_net_0 = MorphologyNet(filters[0])
-            self.morphology_net_1 = MorphologyNetLite(filters[1])
-            self.morphology_net_2 = MorphologyNetLite(filters[2])
+            # 统一使用多尺度形态学网络，通过尺度数量控制复杂度
+            self.morphology_net_0 = MorphologyNet(filters[0], scales=[3, 5, 7])  # 高分辨率：多尺度
+            self.morphology_net_1 = MorphologyNet(filters[1], scales=[3, 5])     # 中分辨率：中等尺度
+            self.morphology_net_2 = MorphologyNet(filters[2], scales=[5])        # 低分辨率：单尺度
 
         self.active = torch.nn.Sigmoid()
 
@@ -472,31 +495,52 @@ class L2SKNet_UNet(nn.Module):
         e4 = self.Maxpool3(e3)
         e4 = self.Conv4(e4)
 
-        c0_0 = self.contrast0_0(e1)
-        c0_1 = self.contrast0_1(e1)
-        c0_2 = self.contrast0_2(e1)
-        c0_3 = self.contrast0_3(e1)
-        c0_all = c0_0 + c0_1 + c0_2 + c0_3
-        e1 = self.contrConV_0(c0_all)
+        # 并行协同处理：形态学与LLSKM协同工作
+        if self.use_morphology:
+            # e1层：多尺度形态学预处理 + LLSKM
+            e1_morph_pre = self.morphology_net_0(e1)
+            c0_0 = self.contrast0_0(e1_morph_pre)
+            c0_1 = self.contrast0_1(e1_morph_pre)
+            c0_2 = self.contrast0_2(e1_morph_pre)
+            c0_3 = self.contrast0_3(e1_morph_pre)
+            c0_all = c0_0 + c0_1 + c0_2 + c0_3
+            e1 = self.contrConV_0(c0_all)
+            
+            # e2层：形态学预处理 + LLSKM
+            e2_morph_pre = self.morphology_net_1(e2)
+            c1_0 = self.contrast1_0(e2_morph_pre)
+            c1_1 = self.contrast1_1(e2_morph_pre)
+            c1_2 = self.contrast1_2(e2_morph_pre)
+            c1_all = c1_0 + c1_1 + c1_2
+            e2 = self.contrConV_1(c1_all)
+            
+            # e3层：轻量形态学预处理 + LLSKM
+            e3_morph_pre = self.morphology_net_2(e3)
+            c2_0 = self.contrast2_0(e3_morph_pre)
+            c2_1 = self.contrast2_1(e3_morph_pre)
+            c2_all = c2_0 + c2_1
+            e3 = self.contrConV_2(c2_all)
+        else:
+            # 原始LLSKM处理
+            c0_0 = self.contrast0_0(e1)
+            c0_1 = self.contrast0_1(e1)
+            c0_2 = self.contrast0_2(e1)
+            c0_3 = self.contrast0_3(e1)
+            c0_all = c0_0 + c0_1 + c0_2 + c0_3
+            e1 = self.contrConV_0(c0_all)
 
-        c1_0 = self.contrast1_0(e2)
-        c1_1 = self.contrast1_1(e2)
-        c1_2 = self.contrast1_2(e2)
-        c1_all = c1_0 + c1_1 + c1_2
-        e2 = self.contrConV_1(c1_all)
+            c1_0 = self.contrast1_0(e2)
+            c1_1 = self.contrast1_1(e2)
+            c1_2 = self.contrast1_2(e2)
+            c1_all = c1_0 + c1_1 + c1_2
+            e2 = self.contrConV_1(c1_all)
 
-        c2_0 = self.contrast2_0(e3)
-        c2_1 = self.contrast2_1(e3)
-        c2_all = c2_0 + c2_1
-        e3 = self.contrConV_2(c2_all)
+            c2_0 = self.contrast2_0(e3)
+            c2_1 = self.contrast2_1(e3)
+            c2_all = c2_0 + c2_1
+            e3 = self.contrConV_2(c2_all)
 
         e4 = self.contrast3(e4)
-
-        # 应用形态学知识迁移
-        if self.use_morphology:
-            e1 = self.morphology_net_0(e1)
-            e2 = self.morphology_net_1(e2)
-            e3 = self.morphology_net_2(e3)
 
         d4 = self.Up4(e4)
         d4 = torch.cat((e3, d4), dim=1)
