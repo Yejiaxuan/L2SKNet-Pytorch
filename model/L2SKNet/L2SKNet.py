@@ -5,6 +5,7 @@ import torch.utils.data
 from .fusion import AddFuseLayer
 from .res_block import ResidualBlock
 from .LLSKMs import LLSKM, LLSKM_d, LLSKM_1D
+from .morphology_net import MorphologyNet, MorphologyNetLite
 
 
 
@@ -82,8 +83,9 @@ class L2SKNet_FPN(nn.Module):
         _4:layers_number=4
     """
 
-    def __init__(self, layers=(2, 2, 2, 2), channels=(16, 32, 64, 128)):
+    def __init__(self, layers=(2, 2, 2, 2), channels=(16, 32, 64, 128), use_morphology=True):
         super(L2SKNet_FPN, self).__init__()
+        self.use_morphology = use_morphology
 
         self.layer0 = _make_layer(block=ResidualBlock, block_num=layers[0],
                                   in_channels=1, out_channels=channels[0], stride=1)
@@ -164,6 +166,12 @@ class L2SKNet_FPN(nn.Module):
         self.fuse21 = _fuse_layer(channels[2], channels[1], channels[1])
         self.fuse10 = _fuse_layer(channels[1], channels[0], channels[0])
 
+        # 添加形态学知识迁移模块
+        if self.use_morphology:
+            self.morphology_net_0 = MorphologyNet(channels[0])
+            self.morphology_net_1 = MorphologyNetLite(channels[1])  # 高层用轻量版
+            self.morphology_net_2 = MorphologyNetLite(channels[2])
+
         self.head = _FCNHead(channels[0], 1)
 
     def forward(self, x):
@@ -197,6 +205,12 @@ class L2SKNet_FPN(nn.Module):
         c2 = self.contrConV_2(c2_all)
 
         c3 = self.contrast3(c3)
+
+        # 应用形态学知识迁移
+        if self.use_morphology:
+            c0 = self.morphology_net_0(c0)
+            c1 = self.morphology_net_1(c1)
+            c2 = self.morphology_net_2(c2)
 
         out = F.interpolate(c3, size=[c2_hei, c2_wid], mode='bilinear')
         out = self.fuse32(out, c2)
@@ -350,8 +364,9 @@ class L2SKNet_UNet(nn.Module):
         _4:layers_number=4
     """
 
-    def __init__(self, in_ch=1, out_ch=1):
+    def __init__(self, in_ch=1, out_ch=1, use_morphology=True):
         super(L2SKNet_UNet, self).__init__()
+        self.use_morphology = use_morphology
 
         n1 = 16
         filters = [n1, n1 * 2, n1 * 4, n1 * 8]
@@ -440,6 +455,12 @@ class L2SKNet_UNet(nn.Module):
         self.Up_conv2 = conv_block(filters[1], filters[0])
         self.Conv = nn.Conv2d(filters[0], out_ch, kernel_size=1, stride=1, padding=0)
 
+        # 添加形态学知识迁移模块
+        if self.use_morphology:
+            self.morphology_net_0 = MorphologyNet(filters[0])
+            self.morphology_net_1 = MorphologyNetLite(filters[1])
+            self.morphology_net_2 = MorphologyNetLite(filters[2])
+
         self.active = torch.nn.Sigmoid()
 
     def forward(self, x):
@@ -470,6 +491,12 @@ class L2SKNet_UNet(nn.Module):
         e3 = self.contrConV_2(c2_all)
 
         e4 = self.contrast3(e4)
+
+        # 应用形态学知识迁移
+        if self.use_morphology:
+            e1 = self.morphology_net_0(e1)
+            e2 = self.morphology_net_1(e2)
+            e3 = self.morphology_net_2(e3)
 
         d4 = self.Up4(e4)
         d4 = torch.cat((e3, d4), dim=1)
