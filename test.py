@@ -21,6 +21,7 @@ parser.add_argument("--dataset_dir", default='./data', type=str, help="train_dat
 parser.add_argument("--save", default='./log', type=str, help="Save path of checkpoints")
 parser.add_argument("--seed", type=int, default=42, help="Threshold for test")
 parser.add_argument("--test_epo", type=str, default='200', help="Number of epoch for test")
+parser.add_argument("--use_morphology", action='store_true', help="Enable morphology knowledge transfer module")
 
 global opt
 opt = parser.parse_args()
@@ -35,21 +36,26 @@ def test():
     else:
         raise NotImplementedError
 
-    param_path = "log/" + opt.dataset_name + "/" + opt.model_name + '/' + opt.test_epo + '.pth.tar'
+    # 根据是否使用形态学模块添加目录后缀
+    model_dir = opt.model_name + ('_morphology' if opt.use_morphology else '')
+    param_path = "log/" + opt.dataset_name + "/" + model_dir + '/' + opt.test_epo + '.pth.tar'
 
     test_loader = DataLoader(dataset=test_set, num_workers=1, batch_size=1, shuffle=False)
 
-    net = Net(model_name=opt.model_name).cuda(device=0)
+    net = Net(model_name=opt.model_name, use_morphology=opt.use_morphology).cuda(device=0)
 
     net.load_state_dict(torch.load(param_path, map_location='cuda:0')['state_dict'], False)
     net.eval()
     
-    print('testing data=' + opt.dataset_name + ', model=' + opt.model_name + ', epoch=' + opt.test_epo)
+    print('testing data=' + opt.dataset_name + ', model=' + opt.model_name + ', epoch=' + opt.test_epo + 
+          (', with morphology' if opt.use_morphology else ''))
 
-    imgDir = "./result/" + opt.dataset_name + "/img/" + opt.model_name + "/"
+    # 根据是否使用形态学模块添加结果目录后缀
+    result_model_name = opt.model_name + ('_morphology' if opt.use_morphology else '')
+    imgDir = "./result/" + opt.dataset_name + "/img/" + result_model_name + "/"
     if not os.path.exists(imgDir):
         os.makedirs(imgDir)
-    matDir = "./result/" + opt.dataset_name + "/mat/" + opt.model_name + "/"
+    matDir = "./result/" + opt.dataset_name + "/mat/" + result_model_name + "/"
     if not os.path.exists(matDir):
         os.makedirs(matDir)
         
