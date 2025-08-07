@@ -227,3 +227,7 @@ if __name__ == '__main__':
 # python train_device0.py --model_names L2SKNet_UNet --dataset_names NUDT-SIRST
 # For multi model：
 # python train_device0.py --model_names L2SKNet_UNet L2SKNet_FPN --dataset_names NUDT-SIRST
+# For morphology model：
+# python train_device0.py --model_names L2SKNet_UNet --dataset_names NUDT-SIRST --use_morphology
+# For multi model with morphology model：
+# python train_device0.py --model_names L2SKNet_UNet L2SKNet_FPN --dataset_names NUDT-SIRST --use_morphology

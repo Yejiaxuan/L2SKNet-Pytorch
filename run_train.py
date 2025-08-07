@@ -28,20 +28,40 @@ def run_with_progress(cmd, model, dataset):
     return process.returncode
 
 def main():
-    models = ['L2SKNet_UNet', 'L2SKNet_FPN', 'L2SKNet_1D_UNet', 'L2SKNet_1D_FPN']
     datasets = ['NUDT-SIRST']
     
-    for i, (dataset, model) in enumerate([(d, m) for d in datasets for m in models], 1):
-        start = time.time()
-        print(f"[{i}/{len(models)}] {datetime.now():%H:%M:%S} - Training {model} on {dataset}")
-        
-        cmd = ['python', 'train_device0.py', '--model_names', model, 
-               '--dataset_names', dataset, '--batchSize', '10', '--threads', '2']
-        
-        run_with_progress(cmd, model, dataset)
-        
-        duration = time.time() - start
-        print(f"[{i}/{len(models)}] {datetime.now():%H:%M:%S} - Completed {model} on {dataset} ({duration/60:.1f} min)")
+    # 定义所有要训练的模型配置
+    model_configs = [
+        # 普通的四个网络
+        ('L2SKNet_UNet', False),
+        ('L2SKNet_FPN', False),
+        ('L2SKNet_1D_UNet', False),
+        ('L2SKNet_1D_FPN', False),
+        # 两个2D带morphology的网络
+        ('L2SKNet_UNet', True),
+        ('L2SKNet_FPN', True),
+    ]
+    
+    total_tasks = len(datasets) * len(model_configs)
+    task_count = 0
+    
+    for dataset in datasets:
+        for model_name, use_morphology in model_configs:
+            task_count += 1
+            start = time.time()
+            
+            model_display_name = model_name + ('_morphology' if use_morphology else '')
+            print(f"[{task_count}/{total_tasks}] {datetime.now():%H:%M:%S} - Training {model_display_name} on {dataset}")
+            
+            cmd = ['python', 'train_device0.py', '--model_names', model_name, 
+                   '--dataset_names', dataset, '--batchSize', '10', '--threads', '2']
+            if use_morphology:
+                cmd.append('--use_morphology')
+            
+            run_with_progress(cmd, model_display_name, dataset)
+            
+            duration = time.time() - start
+            print(f"[{task_count}/{total_tasks}] {datetime.now():%H:%M:%S} - Completed {model_display_name} on {dataset} ({duration/60:.1f} min)")
 
 if __name__ == '__main__':
     main()
